@@ -113,11 +113,14 @@ int main() {
     // Konfiguracija testa
     const int ITERATIONS = 1000;
     const char* KEM_ALGORITHMS[] = {
-    "Kyber512",           // Kyber, varnostni nivo 1 (ali Kyber768/1024 za višje nivoje)
-    "NTRU-HPS-2048-509",  // NTRU HPS L1
-    "Saber-KEM",          // Saber, NIST L3
-    "Classic-McEliece",   // liboqs: "Classic-McEliece" (če je vgrajen)
-    "FrodoKEM-640-AES"    // FrodoKEM, varnostni nivo 1
+    "ML-KEM-512",                // Standardiziran NIST PQC (L1) - lattice-based
+    "ML-KEM-768",                // Standardiziran NIST PQC (L3)
+    "ML-KEM-1024",               // Standardiziran NIST PQC (L5)
+    "Classic-McEliece-348864",   // Standardiziran NIST PQC (L1) - code-based
+    "FrodoKEM-640-AES",          // Alternativni lattice-based (L1)
+    "HQC-128",                   // Code-based s hibridnim pristopom (L1)
+    "BIKE-L1",                   // Code-based alternativni kandidat (L1)
+    "sntrup761"                  // NTRU Prime (L3) - lattice-based z dediščino
     };
 
     for (size_t i = 0; i < OQS_KEM_alg_count(); i++) {
