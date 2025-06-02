@@ -120,6 +120,10 @@ int main() {
     "FrodoKEM-640-AES"    // FrodoKEM, varnostni nivo 1
     };
 
+    for (size_t i = 0; i < OQS_KEM_alg_count(); i++) {
+    std::cout << OQS_KEM_alg_identifier(i) << std::endl;
+    }
+
     std::ofstream file("kem_results.csv");
     file << "algorithm,operation,cycles\n";  // Glava CSV
 
