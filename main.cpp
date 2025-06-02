@@ -113,9 +113,11 @@ int main() {
     // Konfiguracija testa
     const int ITERATIONS = 1000;
     const char* KEM_ALGORITHMS[] = {
-        "Kyber512", "Kyber768", "Kyber1024",
-        "NTRU-HPS-2048-509", "NTRU-HPS-2048-677",
-        "Saber", "FrodoKEM-640-AES"
+    "Kyber512",           // Kyber, varnostni nivo 1 (ali Kyber768/1024 za višje nivoje)
+    "NTRU-HPS-2048-509",  // NTRU HPS L1
+    "Saber-KEM",          // Saber, NIST L3
+    "Classic-McEliece",   // liboqs: "Classic-McEliece" (če je vgrajen)
+    "FrodoKEM-640-AES"    // FrodoKEM, varnostni nivo 1
     };
 
     std::ofstream file("kem_results.csv");
