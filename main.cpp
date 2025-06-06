@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <chrono>  // Added for timing
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -111,15 +112,36 @@ int main() {
     file << "algorithm,operation,cycles\n";
 
     size_t num_algs = sizeof(KEM_ALGORITHMS) / sizeof(KEM_ALGORITHMS[0]);
+    
+    // Total timer for entire test
+    auto total_start = std::chrono::high_resolution_clock::now();
+    
     for (size_t i = 0; i < num_algs; ++i) {
         const char* alg = KEM_ALGORITHMS[i];
         if (OQS_KEM_alg_is_enabled(alg)) {
-            std::cout << "Testiram " << alg << "...\n";
+            std::cout << "Testiram " << alg << "...";
+            std::cout.flush();  // Ensure output is displayed immediately
+            
+            // Start timer for this algorithm
+            auto alg_start = std::chrono::high_resolution_clock::now();
+            
             test_kem(alg, file, ITERATIONS);
+            
+            // Stop timer and calculate duration
+            auto alg_end = std::chrono::high_resolution_clock::now();
+            auto alg_duration = std::chrono::duration_cast<std::chrono::seconds>(alg_end - alg_start);
+            
+            std::cout << " končano (" << alg_duration.count() << "s)\n";
         } else {
-            std::cout << "OPOZORILO: " << alg << " ni podprt, preskocen.\n";
+            std::cout << "OPOZORILO: " << alg << " ni podprt, preskočen.\n";
         }
     }
+    
+    // Total test duration
+    auto total_end = std::chrono::high_resolution_clock::now();
+    auto total_duration = std::chrono::duration_cast<std::chrono::minutes>(total_end - total_start);
+    std::cout << "\nCELOTNI TEST KONČAN\n";
+    std::cout << "Skupni čas izvajanja: " << total_duration.count() << " minut\n";
 
     file.close();
     OQS_destroy();
