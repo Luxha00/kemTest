@@ -69,16 +69,16 @@ void test_kem(const char* kem_name, std::ofstream& file, int iterations) {
 }
 
 int main() {
-#ifdef _WIN32
-    SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-#else
-    setpriority(PRIO_PROCESS, 0, -20);
-    sched_param param;
-    param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-    if (sched_setscheduler(0, SCHED_FIFO, &param) {
-        perror("sched_setscheduler failed");
-    }
-#endif
+    #ifdef _WIN32
+        SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+    #else
+        setpriority(PRIO_PROCESS, 0, -20);
+        sched_param param;
+        param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+        if (sched_setscheduler(0, SCHED_FIFO, &param) {
+            perror("sched_setscheduler failed");
+        }
+    #endif
 
     OQS_init();
 
