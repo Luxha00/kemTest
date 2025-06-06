@@ -81,6 +81,12 @@ int main() {
 
     OQS_init();
 
+    // Print all available algorithms
+    std::cout << "Razpoložljivi algoritmi:\n";
+    for (size_t i = 0; i < OQS_KEM_alg_count(); i++) {
+        std::cout << "  " << OQS_KEM_alg_identifier(i) << "\n";
+    }
+
     const int ITERATIONS = 1000;
     const char* KEM_ALGORITHMS[] = {
         // BIKE
