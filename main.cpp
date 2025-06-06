@@ -75,9 +75,7 @@ int main() {
         setpriority(PRIO_PROCESS, 0, -20);
         sched_param param;
         param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-        if (sched_setscheduler(0, SCHED_FIFO, &param) {
-            perror("sched_setscheduler failed");
-        }
+        sched_setscheduler(0, SCHED_FIFO, &param);
     #endif
 
     OQS_init();
