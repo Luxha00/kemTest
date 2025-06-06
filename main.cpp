@@ -113,14 +113,30 @@ int main() {
     // Konfiguracija testa
     const int ITERATIONS = 1000;
     const char* KEM_ALGORITHMS[] = {
-    "ML-KEM-512",                // Standardiziran NIST PQC (L1) - lattice-based
-    "ML-KEM-768",                // Standardiziran NIST PQC (L3)
-    "ML-KEM-1024",               // Standardiziran NIST PQC (L5)
-    "Classic-McEliece-348864",   // Standardiziran NIST PQC (L1) - code-based
-    "FrodoKEM-640-AES",          // Alternativni lattice-based (L1)
-    "HQC-128",                   // Code-based s hibridnim pristopom (L1)
-    "BIKE-L1",                   // Code-based alternativni kandidat (L1)
-    "sntrup761"                  // NTRU Prime (L3) - lattice-based z dediščino
+        // BIKE
+        "BIKE-L1", "BIKE-L3", "BIKE-L5",
+        
+        // Classic McEliece
+        "Classic-McEliece-348864", "Classic-McEliece-348864f",
+        "Classic-McEliece-460896", "Classic-McEliece-460896f",
+        "Classic-McEliece-6688128", "Classic-McEliece-6688128f",
+        "Classic-McEliece-6960119", "Classic-McEliece-6960119f",
+        "Classic-McEliece-8192128", "Classic-McEliece-8192128f",
+        
+        // HQC
+        "HQC-128", "HQC-192", "HQC-256",
+        
+        // ML-KEM (Kyber)
+        "Kyber512", "Kyber768", "Kyber1024",
+        "ML-KEM-512", "ML-KEM-768", "ML-KEM-1024",
+        
+        // NTRU Prime
+        "sntrup761",
+        
+        // FrodoKEM
+        "FrodoKEM-640-AES", "FrodoKEM-640-SHAKE",
+        "FrodoKEM-976-AES", "FrodoKEM-976-SHAKE",
+        "FrodoKEM-1344-AES", "FrodoKEM-1344-SHAKE"
     };
 
     for (size_t i = 0; i < OQS_KEM_alg_count(); i++) {
