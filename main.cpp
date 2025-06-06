@@ -127,7 +127,6 @@ int main() {
         "HQC-128", "HQC-192", "HQC-256",
         
         // ML-KEM (Kyber)
-        "Kyber512", "Kyber768", "Kyber1024",
         "ML-KEM-512", "ML-KEM-768", "ML-KEM-1024",
         
         // NTRU Prime
