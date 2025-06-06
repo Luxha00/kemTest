@@ -82,9 +82,17 @@ int main() {
     OQS_init();
 
     // Print all available algorithms
-    std::cout << "Razpoložljivi algoritmi:\n";
+    // Print all available algorithms
+    std::cout << "Razpoložljivi algoritmi v liboqs (" << OQS_version() << "):\n";
     for (size_t i = 0; i < OQS_KEM_alg_count(); i++) {
-        std::cout << "  " << OQS_KEM_alg_identifier(i) << "\n";
+        const char* alg_id = OQS_KEM_alg_identifier(i);
+        std::cout << "  [" << i << "] " << alg_id;
+        if (OQS_KEM_alg_is_enabled(alg_id)) {
+            std::cout << " (enabled)";
+        } else {
+            std::cout << " (disabled)";
+        }
+        std::cout << "\n";
     }
 
     const int ITERATIONS = 1000;
