@@ -108,7 +108,7 @@ int main() {
         //"Classic-McEliece-8192128", "Classic-McEliece-8192128f",
         
         // HQC
-        "HQC_128", "HQC_192", "HQC_256",
+        "HQC-128", "HQC-192", "HQC-256",
         
         // ML-KEM (Kyber)
         "ML-KEM-512", "ML-KEM-768", "ML-KEM-1024",
