@@ -112,6 +112,11 @@ int main() {
     file << "algorithm,operation,cycles\n";
 
     size_t num_algs = sizeof(KEM_ALGORITHMS) / sizeof(KEM_ALGORITHMS[0]);
+
+    std::cout << "Enabled KEMs in this liboqs:\n";
+    for (size_t i = 0; i < OQS_KEM_alg_count(); i++) {
+        std::cout << "  - " << OQS_KEM_alg_identifier(i) << "\n";
+    }
     
     // Total timer for entire test
     auto total_start = std::chrono::high_resolution_clock::now();
