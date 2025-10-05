@@ -118,6 +118,10 @@ int main() {
         std::cout << "  - " << OQS_KEM_alg_identifier(i) << "\n";
     }
     
+    OQS_KEM* k = OQS_KEM_new("HQC-128");
+    printf("%s\n", k ? "HQC OK" : "HQC FAIL");
+    if (k) OQS_KEM_free(k);
+    
     // Total timer for entire test
     auto total_start = std::chrono::high_resolution_clock::now();
     
