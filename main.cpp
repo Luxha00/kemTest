@@ -47,8 +47,29 @@ inline uint64_t rdtsc_end() {
 // Število iteracij ogrevanja, ki se izvedejo, a NE zapišejo v izhodno
 // datoteko. Ogrevanje zapolni predpomnilnike (cache), inicializira
 // napovedovalnik vej (branch predictor) in odpravi vpliv "hladnega
-// zagona" prvih klicev na izmerjene čase.
+// zagona" prvih klicev na izmerjene čase. Zdaj se izvede LOČENO za
+// vsak prehod (glej spodaj), ne le enkrat na začetku.
 constexpr int WARMUP_ITERATIONS = 100;
+
+// POPRAVEK: medpomnilnik za "izpiranje" predpomnilnika (cache) med
+// meritvami. Večji od tipičnega L3 predpomnilnika (32 MB), da se ob
+// vsakem klicu dejansko izprazni. Brez tega bi lahko stanje
+// predpomnilnika, ki ga za sabo pusti ena operacija (npr. keygen, ki se
+// med f/ne-f različicami RESNIČNO razlikuje za 10-40 %), pristransko
+// vplivalo na meritev takoj sledeče operacije (npr. encaps) - to je
+// verjeten vzrok, zakaj je bila enkapsulacija med ponovitvami testa
+// nestabilna, dekapsulacija pa ne (glej pogovor o tem v poglavju
+// diskusije).
+constexpr size_t CACHE_FLUSH_BYTES = 32 * 1024 * 1024;
+static std::vector<uint8_t> g_flush_buffer(CACHE_FLUSH_BYTES, 0);
+
+inline void flush_cache() {
+    static volatile uint8_t sink = 0;
+    for (size_t i = 0; i < CACHE_FLUSH_BYTES; i += 64) {
+        g_flush_buffer[i]++;
+    }
+    sink = g_flush_buffer[0];
+}
 
 void test_kem(const char* kem_name, std::ofstream& file, int iterations) {
     OQS_KEM* kem = OQS_KEM_new(kem_name);
@@ -57,52 +78,59 @@ void test_kem(const char* kem_name, std::ofstream& file, int iterations) {
         return;
     }
 
-    // POPRAVEK: medpomnilniki se alocirajo SAMO ENKRAT, izven zanke, in se
-    // v vseh iteracijah ponovno uporabljajo. Prej se je std::vector
-    // alociral znova v vsaki iteraciji, kar je v meritev vnašalo dodaten,
-    // s kriptografsko operacijo nepovezan šum zaradi alokatorja
-    // pomnilnika (malloc/heap management) in morebitnih page faultov.
-    std::vector<uint8_t> public_key(kem->length_public_key);
-    std::vector<uint8_t> secret_key(kem->length_secret_key);
-    std::vector<uint8_t> ciphertext(kem->length_ciphertext);
+    const int total = WARMUP_ITERATIONS + iterations;
+
+    // POPRAVEK: ključi/šifrobesedila za VSE iteracije shranimo vnaprej,
+    // da lahko keygen, encaps in decaps merimo v treh popolnoma ločenih
+    // prehodih (spodaj) - encaps tako nikoli ne meri takoj po keygenu
+    // iste iteracije, decaps nikoli takoj po encapsu iste iteracije.
+    // OPOMBA: pri velikih javnih ključih (npr. Classic-McEliece-8192128f,
+    // ~1,3 MB) to za 1100 iteracij pomeni do ~1,5 GB pomnilnika na
+    // algoritem - na n2-standard-8 (32 GB RAM) ni težava, na manjših
+    // VM-ih pa je vredno iterations ustrezno zmanjšati.
+    std::vector<std::vector<uint8_t>> public_keys(total, std::vector<uint8_t>(kem->length_public_key));
+    std::vector<std::vector<uint8_t>> secret_keys(total, std::vector<uint8_t>(kem->length_secret_key));
+    std::vector<std::vector<uint8_t>> ciphertexts(total, std::vector<uint8_t>(kem->length_ciphertext));
     std::vector<uint8_t> shared_secret_e(kem->length_shared_secret);
     std::vector<uint8_t> shared_secret_d(kem->length_shared_secret);
 
-    const int total_iterations = WARMUP_ITERATIONS + iterations;
-
-    for (int i = 0; i < total_iterations; ++i) {
-        const bool record = (i >= WARMUP_ITERATIONS);
-        uint64_t start, end;
-
-        // Keygen
-        start = rdtsc_start();
-        OQS_STATUS rc = OQS_KEM_keypair(kem, public_key.data(), secret_key.data());
-        end = rdtsc_end();
+    // --- PREHOD 1: generiranje ključev ---
+    for (int i = 0; i < total; ++i) {
+        flush_cache();
+        uint64_t start = rdtsc_start();
+        OQS_STATUS rc = OQS_KEM_keypair(kem, public_keys[i].data(), secret_keys[i].data());
+        uint64_t end = rdtsc_end();
         if (rc != OQS_SUCCESS) {
             std::cerr << "Napaka pri generiranju ključev za " << kem_name << "\n";
             continue;
         }
-        if (record) file << kem_name << ",keygen," << (end - start) << "\n";
+        if (i >= WARMUP_ITERATIONS) file << kem_name << ",keygen," << (end - start) << "\n";
+    }
 
-        // Encaps
-        start = rdtsc_start();
-        rc = OQS_KEM_encaps(kem, ciphertext.data(), shared_secret_e.data(), public_key.data());
-        end = rdtsc_end();
+    // --- PREHOD 2: enkapsulacija (na ključih iz prehoda 1, ne takoj po njihovem generiranju) ---
+    for (int i = 0; i < total; ++i) {
+        flush_cache();
+        uint64_t start = rdtsc_start();
+        OQS_STATUS rc = OQS_KEM_encaps(kem, ciphertexts[i].data(), shared_secret_e.data(), public_keys[i].data());
+        uint64_t end = rdtsc_end();
         if (rc != OQS_SUCCESS) {
             std::cerr << "Napaka pri inkapsulaciji za " << kem_name << "\n";
             continue;
         }
-        if (record) file << kem_name << ",encaps," << (end - start) << "\n";
+        if (i >= WARMUP_ITERATIONS) file << kem_name << ",encaps," << (end - start) << "\n";
+    }
 
-        // Decaps
-        start = rdtsc_start();
-        rc = OQS_KEM_decaps(kem, shared_secret_d.data(), ciphertext.data(), secret_key.data());
-        end = rdtsc_end();
+    // --- PREHOD 3: dekapsulacija (na šifrobesedilih iz prehoda 2, ne takoj po enkapsulaciji) ---
+    for (int i = 0; i < total; ++i) {
+        flush_cache();
+        uint64_t start = rdtsc_start();
+        OQS_STATUS rc = OQS_KEM_decaps(kem, shared_secret_d.data(), ciphertexts[i].data(), secret_keys[i].data());
+        uint64_t end = rdtsc_end();
         if (rc != OQS_SUCCESS) {
             std::cerr << "Napaka pri dekapsulaciji za " << kem_name << "\n";
             continue;
         }
-        if (record) file << kem_name << ",decaps," << (end - start) << "\n";
+        if (i >= WARMUP_ITERATIONS) file << kem_name << ",decaps," << (end - start) << "\n";
     }
 
     OQS_KEM_free(kem);
