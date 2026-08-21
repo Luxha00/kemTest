@@ -202,7 +202,7 @@ int main() {
     // OQS_KEM_new se pokliče za vsak algoritem znotraj vsakega teka),
     // kar je enako, kot če bi program petkrat ročno pognali enega za
     // drugim.
-    constexpr int NUM_RUNS = 10;
+    constexpr int NUM_RUNS = 3;
 
     auto total_start = std::chrono::high_resolution_clock::now();
 
