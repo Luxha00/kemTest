@@ -107,14 +107,14 @@ void test_kem(const char* kem_name, std::ofstream& file, int iterations) {
 
 const char* KEM_ALGORITHMS[] = {
     // BIKE
-    //"BIKE-L1", "BIKE-L3", "BIKE-L5",
+    "BIKE-L1", "BIKE-L3", "BIKE-L5",
 
     // Classic McEliece
-    "Classic-McEliece-348864", "Classic-McEliece-348864f",
-    "Classic-McEliece-460896", "Classic-McEliece-460896f",
-    "Classic-McEliece-6688128", "Classic-McEliece-6688128f",
-    "Classic-McEliece-6960119", "Classic-McEliece-6960119f",
-    "Classic-McEliece-8192128", "Classic-McEliece-8192128f"
+    //"Classic-McEliece-348864", "Classic-McEliece-348864f",
+    "Classic-McEliece-460896f", "Classic-McEliece-460896"
+    //"Classic-McEliece-6688128", "Classic-McEliece-6688128f",
+    //"Classic-McEliece-6960119", "Classic-McEliece-6960119f",
+    //"Classic-McEliece-8192128", "Classic-McEliece-8192128f",
 
     // HQC (referenčna/liboqs različica)
     //"HQC-128", "HQC-192", "HQC-256",
